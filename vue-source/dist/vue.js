@@ -79,16 +79,16 @@
           inserted = args.slice(2);
       }
 
-      inserted && ob.observeArray(inserted);
+      inserted && ob.observerArray(inserted);
       return result;
     };
   });
 
-  var Observe = /*#__PURE__*/function () {
-    function Observe(data) {
-      _classCallCheck(this, Observe);
+  var Observer = /*#__PURE__*/function () {
+    function Observer(data) {
+      _classCallCheck(this, Observer);
 
-      // 相当于在数据上可以获取到__ob__这个属性 指代的是observe实例
+      // 相当于在数据上可以获取到__ob__这个属性 指代的是observer实例
       // __ob__ 是一个响应式的标识，对象数组都有
       Object.defineProperty(data, '__ob__', {
         enumerable: false,
@@ -102,17 +102,17 @@
         // 重写数组方法，函数劫持, 改变数组本身的方法，加入监控
         // 通过原型链 向上查找
         data.__proto__ = arrayMethods;
-        this.observeArray(data);
+        this.observerArray(data);
       } else {
         this.walk(data); // 对数据一步步处理
       }
     }
 
-    _createClass(Observe, [{
-      key: "observeArray",
-      value: function observeArray(data) {
+    _createClass(Observer, [{
+      key: "observerArray",
+      value: function observerArray(data) {
         for (var i = 0; i < data.length; i++) {
-          observe(data[i]);
+          observer(data[i]);
         }
       }
     }, {
@@ -125,12 +125,12 @@
       }
     }]);
 
-    return Observe;
+    return Observer;
   }(); // vue2的性能 递归重写get和set 一次性递归到底 proxy可以解决
 
 
   function defineReactive(data, key, value) {
-    observe(value); // 如果传入的值还是一个对象的话，就做递归循环监测
+    observer(value); // 如果传入的值还是一个对象的话，就做递归循环监测
 
     Object.defineProperty(data, key, {
       get: function get() {
@@ -141,27 +141,27 @@
           return;
         }
 
-        observe(newValue); // 监控当前设置的值，有可能用户给了一个新值还是对象
+        observer(newValue); // 监控当前设置的值，有可能用户给了一个新值还是对象
 
         value = newValue;
       }
     });
   }
 
-  function observe(data) {
+  function observer(data) {
     // 对象就是使用defineProperty 来实现响应式原理
     // 如果这个数据不是对象 或者是null 那就不用监控了
     if (!isObject(data)) {
       return;
     }
 
-    if (data.__ob__ instanceof Observe) {
+    if (data.__ob__ instanceof Observer) {
       // 防止对象被重复观测
       return;
     } // 对数据进行defineProperty
 
 
-    return new Observe(data); // 可以看到当前数据是否被观测过
+    return new Observer(data); // 可以看到当前数据是否被观测过
   }
 
   function initState(vm) {
@@ -183,8 +183,15 @@
 
     data = vm._data = typeof data === 'function' ? data.call(vm) : data; // 观测数据
 
-    observe(data); // 观测这个数据
+    observer(data); // 观测这个数据
   }
+
+  // 实现模板的编译
+  // 模板编译原理
+  // 1.先把我们的代码转化成ast语法树 (1)parser解析 (正则)
+  // 2.标记静态树 (2) 树得遍历标记markup
+  // 3.通过ast产生的语法树 生成代码 => render函数 codegen
+  function compileToFunctions(template) {}
 
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
@@ -193,6 +200,34 @@
       vm.$options = options; // 用户传入的参数
 
       initState(vm); // 初始化状态
+      // 需要通过模板渲染
+
+      if (vm.$options.el) {
+        vm.$mount(vm.$options.el);
+      }
+    };
+
+    Vue.prototype.$mount = function (el) {
+      // 可能是字符串 也可以传入一个dom对象
+      var vm = this;
+      el = document.querySelector(el); // 获取el属性
+      // 如果同时传入 template 和 render 默认会采用render抛弃template，如果都没传
+      // 就使用id="app"中的模板
+
+      var opts = vm.$options;
+
+      if (!opts.render) {
+        var template = opts.template;
+
+        if (!template && el) {
+          // 应该使用外部的模板
+          template = el.outerHTML;
+        }
+
+        var render = compileToFunctions();
+        opts.render = render;
+      } // 走到这里说明不需要编译了，因为用户传入的就是一个render函数
+
     };
   }
 

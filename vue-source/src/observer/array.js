@@ -25,7 +25,7 @@ methods.forEach((method) => {
       default:
         break
     }
-    inserted && ob.observeArray(inserted)
+    inserted && ob.observerArray(inserted)
     return result
   }
 })

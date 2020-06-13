@@ -8,6 +8,7 @@
   <body>
     <div id="app"></div>
     <script src="../dist/vue.js"></script>
+    <!-- vue2中 模板编译 可以选择性添加 runtimeOnly 只在运行时使用 （无法解析用户传递template属性） runtime with compiler (可以实现模板编译的)-->
     <script>
       const vm = new Vue({
         el: '#app',
@@ -23,6 +24,7 @@
             arr: [1, 2, 3, 4, { a: 1 }],
           }
         },
+        template: `<div class="red"><span>123</span> hello {{msg}} {{age}}</div>`
       })
       console.log(vm)
     </script>
