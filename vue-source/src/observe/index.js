@@ -3,9 +3,10 @@ import { arrayMethods } from './array'
 class Observe {
   constructor(data) {
     // 相当于在数据上可以获取到__ob__这个属性 指代的是observe实例
+    // __ob__ 是一个响应式的标识，对象数组都有
     Object.defineProperty(data, '__ob__', {
       enumerable: false, // 不可枚举
-      configurable: false,
+      configurable: false, // 不可配置
       value: this
     })
     if (Array.isArray(data)) {
@@ -53,6 +54,10 @@ export function observe(data) {
 
   // 如果这个数据不是对象 或者是null 那就不用监控了
   if (!isObject(data)) {
+    return
+  }
+
+  if(data.__ob__ instanceof Observe) { // 防止对象被重复观测
     return
   }
   // 对数据进行defineProperty

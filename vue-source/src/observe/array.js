@@ -12,7 +12,7 @@ methods.forEach((method) => {
     const ob = this.__ob__
     // 当用户调用数组方法时，会先执行我自己改造的逻辑，再执行数组默认的逻辑
     let result = oldArrayMethods[method].apply(this, args)
-    let inserted = []
+    let inserted
     // push unshift splice 都可以新增属性 (新增的属性可能是一个对象类型)
     // 内部还对数组中引用类型也做了一次劫持 [].push({name: 'bjw'})
     switch (method) {

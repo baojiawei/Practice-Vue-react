@@ -65,7 +65,7 @@
       }
 
       var result = oldArrayMethods[method].apply(this, args);
-      var inserted = []; // push unshift splice 都可以新增属性 (新增的属性可能是一个对象类型)
+      var inserted; // push unshift splice 都可以新增属性 (新增的属性可能是一个对象类型)
       // 内部还对数组中引用类型也做了一次劫持 [].push({name: 'bjw'})
 
       switch (method) {
@@ -89,10 +89,12 @@
       _classCallCheck(this, Observe);
 
       // 相当于在数据上可以获取到__ob__这个属性 指代的是observe实例
+      // __ob__ 是一个响应式的标识，对象数组都有
       Object.defineProperty(data, '__ob__', {
         enumerable: false,
         // 不可枚举
         configurable: false,
+        // 不可配置
         value: this
       });
 
@@ -150,6 +152,11 @@
     // 对象就是使用defineProperty 来实现响应式原理
     // 如果这个数据不是对象 或者是null 那就不用监控了
     if (!isObject(data)) {
+      return;
+    }
+
+    if (data.__ob__ instanceof Observe) {
+      // 防止对象被重复观测
       return;
     } // 对数据进行defineProperty
 
