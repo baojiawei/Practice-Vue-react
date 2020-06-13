@@ -1,8 +1,29 @@
 import { isObject } from '../utils'
+import { arrayMethods } from './array'
 class Observe {
   constructor(data) {
-    this.walk(data) // 对数据一步步处理
+    // 相当于在数据上可以获取到__ob__这个属性 指代的是observe实例
+    Object.defineProperty(data, '__ob__', {
+      enumerable: false, // 不可枚举
+      configurable: false,
+      value: this
+    })
+    if (Array.isArray(data)) {
+      // 重写数组方法，函数劫持, 改变数组本身的方法，加入监控
+      // 通过原型链 向上查找
+      data.__proto__ = arrayMethods
+      this.observeArray(data)
+    } else {
+      this.walk(data) // 对数据一步步处理
+    }
   }
+
+  observeArray(data) {
+    for (let i = 0; i < data.length; i++) {
+      observe(data[i])
+    }
+  }
+
   walk(data) {
     // 对象的循环 data:{msg: 'bbb', age: 12}
     Object.keys(data).forEach((key) => {

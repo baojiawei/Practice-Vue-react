@@ -49,14 +49,71 @@
     return _typeof(obj) === 'object' && obj !== null;
   }
 
+  // 获取数组原型上的方法
+  var oldArrayMethods = Array.prototype; // 创建一个全新的对象，可以找到数组原型上的方法, 而且修改对象时不会影响数组原型方法
+
+  var arrayMethods = Object.create(oldArrayMethods); // 这7个方法全部都可以改变原数组
+
+  var methods = ['push', 'pop', 'unshift', 'sort', 'reverse', 'splice'];
+  methods.forEach(function (method) {
+    // 函数劫持 AOP
+    arrayMethods[method] = function () {
+      var ob = this.__ob__; // 当用户调用数组方法时，会先执行我自己改造的逻辑，再执行数组默认的逻辑
+
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var result = oldArrayMethods[method].apply(this, args);
+      var inserted = []; // push unshift splice 都可以新增属性 (新增的属性可能是一个对象类型)
+      // 内部还对数组中引用类型也做了一次劫持 [].push({name: 'bjw'})
+
+      switch (method) {
+        case 'push':
+        case 'unshift':
+          inserted = args;
+          break;
+
+        case 'splice':
+          // 也是新增属性，可以修改，可以删除 [].splice(arr, 1, 'div')
+          inserted = args.slice(2);
+      }
+
+      inserted && ob.observeArray(inserted);
+      return result;
+    };
+  });
+
   var Observe = /*#__PURE__*/function () {
     function Observe(data) {
       _classCallCheck(this, Observe);
 
-      this.walk(data); // 对数据一步步处理
+      // 相当于在数据上可以获取到__ob__这个属性 指代的是observe实例
+      Object.defineProperty(data, '__ob__', {
+        enumerable: false,
+        // 不可枚举
+        configurable: false,
+        value: this
+      });
+
+      if (Array.isArray(data)) {
+        // 重写数组方法，函数劫持, 改变数组本身的方法，加入监控
+        // 通过原型链 向上查找
+        data.__proto__ = arrayMethods;
+        this.observeArray(data);
+      } else {
+        this.walk(data); // 对数据一步步处理
+      }
     }
 
     _createClass(Observe, [{
+      key: "observeArray",
+      value: function observeArray(data) {
+        for (var i = 0; i < data.length; i++) {
+          observe(data[i]);
+        }
+      }
+    }, {
       key: "walk",
       value: function walk(data) {
         // 对象的循环 data:{msg: 'bbb', age: 12}
