@@ -19,15 +19,15 @@ export function initMixin(Vue) {
     el = document.querySelector(el) // 获取el属性
     // 如果同时传入 template 和 render 默认会采用render抛弃template，如果都没传
     // 就使用id="app"中的模板
-    const opts = vm.$options
-    if (!opts.render) {
-      let template = opts.template
+    const options = vm.$options
+    if (!options.render) {
+      let template = options.template
       if (!template && el) {
         // 应该使用外部的模板
         template = el.outerHTML
       }
       const render = compileToFunctions(template)
-      opts.render = render
+      options.render = render
     }
 
     // 走到这里说明不需要编译了，因为用户传入的就是一个render函数

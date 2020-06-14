@@ -1,13 +1,13 @@
 import { observer } from './observer/index'
 export function initState(vm) {
-  const opts = vm.$options
-  if (opts.props) {
+  const options = vm.$options
+  if (options.props) {
     initProps(vm)
   }
-  if (opts.methods) {
+  if (options.methods) {
     initMethods(vm)
   }
-  if (opts.data) {
+  if (options.data) {
     initData(vm)
   }
 }
