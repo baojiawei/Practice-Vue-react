@@ -200,17 +200,56 @@
   var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性的
 
   var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
+  var root = null; // ast语法树的树根
+
+  var currentParent; // 标识当前父亲是谁
+
+  var stack = [];
+  var ELEMENT_TYPE = 1;
+  var TEXT_TYPE = 3;
+
+  function createASTElement(tagName, attrs) {
+    return {
+      tag: tagName,
+      type: ELEMENT_TYPE,
+      children: [],
+      attrs: attrs,
+      parent: null
+    };
+  }
 
   function start(tagName, attrs) {
-    console.log('开始标签：', tagName, '属性是：', attrs);
+    // 遇到开始标签 就创建一个ast元素
+    var element = createASTElement(tagName, attrs);
+
+    if (!root) {
+      root = element;
+    }
+
+    currentParent = element; // 把当前元素标记成父ast树
+
+    stack.push(element); // 将开始标签存放到栈中
   }
 
   function chars(text) {
-    console.log('文本是：', text);
+    text = text.replace(/\s/g, '');
+
+    if (text) {
+      currentParent.children.push({
+        text: text,
+        type: TEXT_TYPE
+      });
+    }
   }
 
   function end(tagName) {
-    console.log('结束标签：', tagName);
+    var element = stack.pop();
+    currentParent = stack[stack.length - 1];
+
+    if (currentParent) {
+      element.parent = currentParent;
+      currentParent.children.push(element);
+    }
   }
 
   function parseHTML(html) {
@@ -281,10 +320,13 @@
         }
       }
     }
+
+    return root;
   }
 
   function compileToFunctions(template) {
     var root = parseHTML(template);
+    console.log(root);
     return function render() {};
   }
 
