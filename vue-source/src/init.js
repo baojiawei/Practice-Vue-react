@@ -1,5 +1,6 @@
 import { initState } from './state'
 import { compileToFunctions } from './compiler/index'
+import { mountComponent } from './lifecycle'
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     // Vue的内部 $options 就是用户传递的所有参数
@@ -31,5 +32,7 @@ export function initMixin(Vue) {
     }
 
     // 走到这里说明不需要编译了，因为用户传入的就是一个render函数
+    // 渲染当前组件 挂载这个组件
+    mountComponent(vm, el)
   }
 }

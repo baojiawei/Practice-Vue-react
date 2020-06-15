@@ -492,6 +492,27 @@
     return renderFn;
   }
 
+  function lifecycleMixin(Vue) {
+    Vue.prototype._update = function (vnode) {};
+  }
+  function mountComponent(vm, el) {
+    var options = vm.$options;
+    vm.$el = el; // 真实的dom元素
+    // Watcher 就是用来渲染的
+    // vm._render 通过解析的render方法 渲染出虚拟dom
+    // vm_update 通过虚拟dom 创建真实的dom
+    // 渲染页面
+
+    var updateComponent = function updateComponent() {
+      // 无论是渲染还是更新都会调用此方法
+      // 返回的是虚拟dom, 生成真实dom
+      vm._update(vm._render());
+    }; // 渲染watcher 每个组件都有一个watcher
+
+
+    new Watcher(vm, updateComponent, function () {}, true); // true表示是一个渲染watcher
+  }
+
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
       // Vue的内部 $options 就是用户传递的所有参数
@@ -526,8 +547,15 @@
         var render = compileToFunctions(template);
         options.render = render;
       } // 走到这里说明不需要编译了，因为用户传入的就是一个render函数
+      // 渲染当前组件 挂载这个组件
 
+
+      mountComponent(vm, el);
     };
+  }
+
+  function renderMixin(Vue) {
+    Vue.prototype._render = function () {};
   }
 
   function Vue(options) {
@@ -536,6 +564,8 @@
   }
 
   initMixin(Vue);
+  renderMixin(Vue);
+  lifecycleMixin(Vue);
 
   return Vue;
 
