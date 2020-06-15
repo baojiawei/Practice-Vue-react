@@ -104,6 +104,23 @@
   function isObject(obj) {
     return _typeof(obj) === 'object' && obj !== null;
   }
+  /**
+   * 取值时代理数据
+   * @param {*} vm 
+   * @param {*} source 
+   * @param {*} key 
+   */
+
+  function proxy(vm, source, key) {
+    Object.defineProperty(vm, key, {
+      get: function get() {
+        return vm[source][key];
+      },
+      set: function set(newValue) {
+        vm[source][key] = newValue;
+      }
+    });
+  }
 
   // 获取数组原型上的方法
   var oldArrayMethods = Array.prototype; // 创建一个全新的对象，可以找到数组原型上的方法, 而且修改对象时不会影响数组原型方法
@@ -237,7 +254,12 @@
     var data = vm.$options.data; // 用户传入的数据
     // vm._data是监测后的数据
 
-    data = vm._data = typeof data === 'function' ? data.call(vm) : data; // 观测数据
+    data = vm._data = typeof data === 'function' ? data.call(vm) : data; // 为了让用户更好的使用，我希望可以直接vm.xxx
+
+    for (var key in data) {
+      proxy(vm, '_data', key);
+    } // 观测数据
+
 
     observer(data); // 观测这个数据
   }
