@@ -492,8 +492,88 @@
     return renderFn;
   }
 
+  var Watcher = /*#__PURE__*/function () {
+    function Watcher(vm, exprOrFn, callback, options) {
+      _classCallCheck(this, Watcher);
+
+      this.vm = vm;
+      this.exprOrFn = exprOrFn;
+      this.callback = callback;
+      this.options = options; // 将内部传过来的回调函数，放到getter属性上
+
+      this.getter = exprOrFn;
+      this.get();
+    }
+
+    _createClass(Watcher, [{
+      key: "get",
+      value: function get() {
+        this.getter();
+      }
+    }]);
+
+    return Watcher;
+  }();
+
+  function patch(oldVnode, vnode) {
+    // 判断是更新还是渲染
+    var isRealElement = oldVnode.nodeType;
+
+    if (isRealElement) {
+      var oldElm = oldVnode; // div id="app"
+
+      var parentElm = oldElm.parentNode; // body
+
+      var el = createElm(vnode);
+      parentElm.insertBefore(el, oldElm.nextSibling);
+      parentElm.removeChild(oldElm);
+    }
+  }
+
+  function createElm(vnode) {
+    var tag = vnode.tag,
+        children = vnode.children,
+        key = vnode.key,
+        data = vnode.data,
+        text = vnode.text; // 是标签就创建标签
+
+    if (typeof tag === 'string') {
+      vnode.el = document.createElement(tag);
+      updateProperties(vnode);
+      children.forEach(function (child) {
+        return vnode.el.appendChild(createElm(child));
+      });
+    } else {
+      // 虚拟dom上映射着真实dom，方便后续更新操作
+      vnode.el = document.createTextNode(text);
+    }
+
+    return vnode.el; // 如果不是标签就是文本
+  }
+
+  function updateProperties(vnode) {
+    var newProps = vnode.data || {};
+    var el = vnode.el;
+
+    for (var key in newProps) {
+      if (key === 'style') {
+        for (var styleName in newProps.style) {
+          el.style[styleName] = newProps.style[styleName];
+        }
+      } else if (key === 'class') {
+        el.className = newProps["class"];
+      } else {
+        el.setAttribute(key, newProps[key]);
+      }
+    }
+  }
+
   function lifecycleMixin(Vue) {
-    Vue.prototype._update = function (vnode) {};
+    Vue.prototype._update = function (vnode) {
+      var vm = this; // 通过虚拟节点，渲染出真实的dom
+
+      vm.$el = patch(vm.$el, vnode); // 需要用虚拟节点创建出真实节点，替换掉真实的$el
+    };
   }
   function mountComponent(vm, el) {
     var options = vm.$options;
@@ -554,8 +634,58 @@
     };
   }
 
+  function createElement(tag) {
+    var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var key = data.key;
+
+    if (key) {
+      delete data.key;
+    }
+
+    for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      children[_key - 2] = arguments[_key];
+    }
+
+    return vnode(tag, data, key, children, undefined);
+  }
+  function createTextNode(text) {
+    return vnode(undefined, undefined, undefined, undefined, text);
+  } // 虚拟节点 就是通过_c _v实现用对象描述dom的操作（对象）
+  // 1）将template转换为ast语法树 => 生成render方法 => 生成虚拟dom => 真实的dom
+  // 更新流程: 重新生成虚拟dom => 更新真实dom
+
+  function vnode(tag, data, key, children, text) {
+    return {
+      tag: tag,
+      data: data,
+      key: key,
+      children: children,
+      text: text
+    };
+  }
+
   function renderMixin(Vue) {
-    Vue.prototype._render = function () {};
+    // _c创建元素的虚拟节点
+    Vue.prototype._c = function () {
+      return createElement.apply(void 0, arguments); // tag,data,children1,children2
+    }; // _v创建文本的虚拟节点
+
+
+    Vue.prototype._v = function (text) {
+      return createTextNode(text);
+    }; // _s JSON.stringify()
+
+
+    Vue.prototype._s = function (val) {
+      return val == null ? '' : _typeof(val) === 'object' ? JSON.stringify(val) : val;
+    };
+
+    Vue.prototype._render = function () {
+      var vm = this;
+      var render = vm.$options.render;
+      var vnode = render.call(vm);
+      return vnode;
+    };
   }
 
   function Vue(options) {
