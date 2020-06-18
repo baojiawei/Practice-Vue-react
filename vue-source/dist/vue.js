@@ -549,7 +549,8 @@
     }
 
     return vnode.el; // 如果不是标签就是文本
-  }
+  } // 添加相应的属性
+
 
   function updateProperties(vnode) {
     var newProps = vnode.data || {};

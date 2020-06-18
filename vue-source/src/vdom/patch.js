@@ -27,7 +27,7 @@ function createElm(vnode) {
   return vnode.el
   // 如果不是标签就是文本
 }
-
+// 添加相应的属性
 function updateProperties(vnode) {
   let newProps = vnode.data || {}
   let el = vnode.el
