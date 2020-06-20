@@ -1,14 +1,10 @@
-import { isObject } from '../utils'
+import { isObject, def } from '../utils'
 import { arrayMethods } from './array'
 class Observer {
   constructor(data) {
     // 相当于在数据上可以获取到__ob__这个属性 指代的是observer实例
     // __ob__ 是一个响应式的标识，对象数组都有
-    Object.defineProperty(data, '__ob__', {
-      enumerable: false, // 不可枚举
-      configurable: false, // 不可配置
-      value: this
-    })
+    def(data, '__ob__', this)
     if (Array.isArray(data)) {
       // 重写数组方法，函数劫持, 改变数组本身的方法，加入监控
       // 通过原型链 向上查找

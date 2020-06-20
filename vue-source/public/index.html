@@ -4,9 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <style>
+      .red {
+        color: red
+      }
+      .green {
+        color: green
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="room" class="red" style="color: blue;width: 200px;">
+        <span>123</span> hello {{msg}} {{age}}
+      </div>
+      <div>
+        <ul class="green">
+          <li>helloworld</li>
+          <li style="color: purple">杭州</li>
+          <li style="color: black">上海</li>
+        </ul>
+      </div>
+    </div>
     <script src="../dist/vue.js"></script>
     <!-- vue2中 模板编译 可以选择性添加 runtimeOnly 只在运行时使用 （无法解析用户传递template属性） runtime with compiler (可以实现模板编译的)-->
     <script>
@@ -16,17 +35,14 @@
         // 对对象的所有属性 使用defineProperty进行重新定义 get和set
         data() {
           return {
-            msg: '珠峰',
+            msg: '测试一下',
             age: 12,
             address: {
               city: '杭州',
             },
             arr: [1, 2, 3, 4, { a: 1 }],
           }
-        },
-        template: `<div id="room" class="red" style="color: red;width: 200px;">
-                      <span>123</span> hello {{msg}} {{age}}
-                   </div>`
+        }
       })
     </script>
   </body>

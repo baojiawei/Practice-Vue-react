@@ -20,3 +20,16 @@ export function proxy(vm, source, key) {
     }
   })
 }
+/**
+ * 定义属性不可被枚举
+ * @param {*} data 
+ * @param {*} key 
+ * @param {*} value 
+ */
+export function def(data, key, value) {
+  Object.defineProperty(data, key, {
+    enumerable: false, // 不可枚举
+    configurable: false, // 不可配置
+    value
+  })
+}
