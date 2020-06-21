@@ -42,6 +42,55 @@
     return Constructor;
   }
 
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+      if (enumerableOnly) symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+      keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? arguments[i] : {};
+
+      if (i % 2) {
+        ownKeys(Object(source), true).forEach(function (key) {
+          _defineProperty(target, key, source[key]);
+        });
+      } else if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+      } else {
+        ownKeys(Object(source)).forEach(function (key) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+      }
+    }
+
+    return target;
+  }
+
   function _slicedToArray(arr, i) {
     return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
   }
@@ -106,9 +155,9 @@
   }
   /**
    * 取值时代理数据
-   * @param {*} vm 
-   * @param {*} source 
-   * @param {*} key 
+   * @param {*} vm
+   * @param {*} source
+   * @param {*} key
    */
 
   function proxy(vm, source, key) {
@@ -120,6 +169,76 @@
         vm[source][key] = newValue;
       }
     });
+  }
+  /**
+   * 定义属性不可被枚举
+   * @param {*} data
+   * @param {*} key
+   * @param {*} value
+   */
+
+  function def(data, key, value) {
+    Object.defineProperty(data, key, {
+      enumerable: false,
+      // 不可枚举
+      configurable: false,
+      // 不可配置
+      value: value
+    });
+  }
+  var LIFECYCLE_HOOKS = ['beforeCreate', 'created', 'beforeMount', 'mounted', 'beforeUpdate', 'updated', 'beforeDestory', 'destoryed'];
+  var strats = {};
+
+  function mergeHook(parentVal, childVal) {
+    if (childVal) {
+      if (parentVal) {
+        return parentVal.concat(childVal);
+      } else {
+        return [childVal];
+      }
+    } else {
+      return parentVal;
+    }
+  }
+
+  LIFECYCLE_HOOKS.forEach(function (hook) {
+    strats[hook] = mergeHook;
+  });
+  /**
+   * 合并全局属性
+   * @param {*} parent
+   * @param {*} child
+   */
+
+  function mergeOptions(parent, child) {
+    var options = {};
+
+    for (var key in parent) {
+      mergeField(key);
+    }
+
+    for (var _key in child) {
+      if (!parent.hasOwnProperty(_key)) {
+        mergeField(_key);
+      }
+    } // 默认的合并策略， 但是有些属性 需要有特殊的合并方式 生命周期的合并
+
+
+    function mergeField(key) {
+      if (strats[key]) {
+        return options[key] = strats[key](parent[key], child[key]);
+      }
+
+      if (_typeof(parent[key]) === 'object' && _typeof(child[key]) === 'object') {
+        options[key] = _objectSpread2(_objectSpread2({}, parent[key]), child[key]);
+      } else if (child[key] == null) {
+        options[key] = parent[key];
+      } else {
+        options[key] = child[key];
+      }
+    }
+
+    return options;
   }
 
   // 获取数组原型上的方法
@@ -163,13 +282,7 @@
 
       // 相当于在数据上可以获取到__ob__这个属性 指代的是observer实例
       // __ob__ 是一个响应式的标识，对象数组都有
-      Object.defineProperty(data, '__ob__', {
-        enumerable: false,
-        // 不可枚举
-        configurable: false,
-        // 不可配置
-        value: this
-      });
+      def(data, '__ob__', this);
 
       if (Array.isArray(data)) {
         // 重写数组方法，函数劫持, 改变数组本身的方法，加入监控
@@ -274,60 +387,60 @@
 
   var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
 
-  var root = null; // ast语法树的树根
-
-  var currentParent; // 标识当前父亲是谁
-
-  var stack = [];
-  var ELEMENT_TYPE = 1;
-  var TEXT_TYPE = 3;
-
-  function createASTElement(tagName, attrs) {
-    return {
-      tag: tagName,
-      type: ELEMENT_TYPE,
-      children: [],
-      attrs: attrs,
-      parent: null
-    };
-  }
-
-  function start(tagName, attrs) {
-    // 遇到开始标签 就创建一个ast元素
-    var element = createASTElement(tagName, attrs);
-
-    if (!root) {
-      root = element;
-    }
-
-    currentParent = element; // 把当前元素标记成父ast树
-
-    stack.push(element); // 将开始标签存放到栈中
-  }
-
-  function chars(text) {
-    text = text.replace(/\s/g, '');
-
-    if (text) {
-      currentParent.children.push({
-        text: text,
-        type: TEXT_TYPE
-      });
-    }
-  }
-
-  function end(tagName) {
-    var element = stack.pop();
-    currentParent = stack[stack.length - 1];
-
-    if (currentParent) {
-      element.parent = currentParent;
-      currentParent.children.push(element);
-    }
-  }
-
   function parseHTML(html) {
-    // 不停的去解析html字符串
+    var root = null; // ast语法树的树根
+
+    var currentParent; // 标识当前父亲是谁
+
+    var stack = [];
+    var ELEMENT_TYPE = 1;
+    var TEXT_TYPE = 3;
+
+    function createASTElement(tagName, attrs) {
+      return {
+        tag: tagName,
+        type: ELEMENT_TYPE,
+        children: [],
+        attrs: attrs,
+        parent: null
+      };
+    }
+
+    function start(tagName, attrs) {
+      // 遇到开始标签 就创建一个ast元素
+      var element = createASTElement(tagName, attrs);
+
+      if (!root) {
+        root = element;
+      }
+
+      currentParent = element; // 把当前元素标记成父ast树
+
+      stack.push(element); // 将开始标签存放到栈中
+    }
+
+    function chars(text) {
+      text = text.replace(/\s/g, '');
+
+      if (text) {
+        currentParent.children.push({
+          text: text,
+          type: TEXT_TYPE
+        });
+      }
+    }
+
+    function end(tagName) {
+      var element = stack.pop();
+      currentParent = stack[stack.length - 1];
+
+      if (currentParent) {
+        element.parent = currentParent;
+        currentParent.children.push(element);
+      }
+    } // 不停的去解析html字符串
+
+
     while (html) {
       var textEnd = html.indexOf('<');
 
@@ -478,6 +591,7 @@
     return code;
   }
 
+  // 实现模板的编译
   function compileToFunctions(template) {
     // 解析html字符串 将html字符串 => ast语法树
     var root = parseHTML(template); // 需要将ast语法树生成最终的render函数 就是字符串拼接(模板引擎 )
@@ -497,7 +611,6 @@
       _classCallCheck(this, Watcher);
 
       this.vm = vm;
-      this.exprOrFn = exprOrFn;
       this.callback = callback;
       this.options = options; // 将内部传过来的回调函数，放到getter属性上
 
@@ -527,6 +640,7 @@
       var el = createElm(vnode);
       parentElm.insertBefore(el, oldElm.nextSibling);
       parentElm.removeChild(oldElm);
+      return el;
     }
   }
 
@@ -582,7 +696,8 @@
     // Watcher 就是用来渲染的
     // vm._render 通过解析的render方法 渲染出虚拟dom
     // vm_update 通过虚拟dom 创建真实的dom
-    // 渲染页面
+
+    callHook(vm, 'beforeMount'); // 渲染页面
 
     var updateComponent = function updateComponent() {
       // 无论是渲染还是更新都会调用此方法
@@ -592,16 +707,30 @@
 
 
     new Watcher(vm, updateComponent, function () {}, true); // true表示是一个渲染watcher
+
+    callHook(vm, 'mounted');
+  }
+  function callHook(vm, hook) {
+    var handlers = vm.$options[hook]; // [fn, fn, fn]
+
+    if (handlers) {
+      for (var i = 0; i < handlers.length; i++) {
+        handlers[i].call(vm);
+      }
+    }
   }
 
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
       // Vue的内部 $options 就是用户传递的所有参数
-      var vm = this;
-      vm.$options = options; // 用户传入的参数
+      var vm = this; // 将用户传递的和全局的进行一个合并
 
+      vm.$options = mergeOptions(vm.constructor.options, options); // 用户传入的参数
+
+      callHook(vm, 'beforeCreate');
       initState(vm); // 初始化状态
-      // 需要通过模板渲染
+
+      callHook(vm, 'created'); // 需要通过模板渲染
 
       if (vm.$options.el) {
         vm.$mount(vm.$options.el);
@@ -689,6 +818,28 @@
     };
   }
 
+  function initGlobalAPI(Vue) {
+    Vue.options = {};
+
+    Vue.mixin = function (mixin) {
+      this.options = mergeOptions(this.options, mixin);
+    };
+
+    Vue.mixin({
+      a: 1,
+      beforeCreate: function beforeCreate() {
+        console.log('mixin 1');
+      }
+    });
+    Vue.mixin({
+      b: 2,
+      beforeCreate: function beforeCreate() {
+        console.log('mixin 2');
+      }
+    });
+    console.log(Vue.options);
+  }
+
   function Vue(options) {
     // 内部要进行初始化操作
     this._init(options);
@@ -696,7 +847,9 @@
 
   initMixin(Vue);
   renderMixin(Vue);
-  lifecycleMixin(Vue);
+  lifecycleMixin(Vue); // 初始化全局的API
+
+  initGlobalAPI(Vue);
 
   return Vue;
 

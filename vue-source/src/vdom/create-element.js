@@ -1,9 +1,9 @@
-export function createElement(tag,data = {},...children) {
+export function createElement(tag, data = {}, ...children) {
   let key = data.key
-  if(key) {
+  if (key) {
     delete data.key
   }
-  return vnode(tag, data, key,children, undefined)
+  return vnode(tag, data, key, children, undefined)
 }
 
 export function createTextNode(text) {
@@ -19,6 +19,6 @@ function vnode(tag, data, key, children, text) {
     data,
     key,
     children,
-    text
+    text,
   }
 }

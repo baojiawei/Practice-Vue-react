@@ -6,23 +6,23 @@
     <title>Document</title>
     <style>
       .red {
-        color: red
+        color: red;
       }
       .green {
-        color: green
+        color: green;
       }
     </style>
   </head>
   <body>
     <div id="app">
-      <div id="room" class="red" style="color: blue;width: 200px;">
+      <div id="room" class="red" style="color: blue; width: 200px;">
         <span>123</span> hello {{msg}} {{age}}
       </div>
       <div>
         <ul class="green">
           <li>helloworld</li>
-          <li style="color: purple">杭州</li>
-          <li style="color: black">上海</li>
+          <li style="color: purple;">杭州</li>
+          <li style="color: black;">上海</li>
         </ul>
       </div>
     </div>
@@ -42,6 +42,18 @@
             },
             arr: [1, 2, 3, 4, { a: 1 }],
           }
+        },
+        beforeCreate() {
+          console.log('beforeCreate', this.age)
+        },
+        created() {
+          console.log('created', this.$el)
+        },
+        beforeMount() {
+          console.log('beforeMount', this.$el)
+        },
+        mounted() {
+          console.log('mounted', this.$el)
         }
       })
     </script>

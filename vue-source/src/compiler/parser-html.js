@@ -5,48 +5,48 @@ const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`) // 匹配标签结尾的
 const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/ // 匹配属性的
 const startTagClose = /^\s*(\/?)>/ // 匹配标签结束的 >
 
-let root = null // ast语法树的树根
-let currentParent // 标识当前父亲是谁
-let stack = []
-const ELEMENT_TYPE = 1
-const TEXT_TYPE = 3
-
-function createASTElement(tagName, attrs) {
-  return {
-    tag: tagName,
-    type: ELEMENT_TYPE,
-    children: [],
-    attrs,
-    parent: null,
-  }
-}
-function start(tagName, attrs) {
-  // 遇到开始标签 就创建一个ast元素
-  let element = createASTElement(tagName, attrs)
-  if (!root) {
-    root = element
-  }
-  currentParent = element // 把当前元素标记成父ast树
-  stack.push(element) // 将开始标签存放到栈中
-}
-function chars(text) {
-  text = text.replace(/\s/g, '')
-  if (text) {
-    currentParent.children.push({
-      text,
-      type: TEXT_TYPE,
-    })
-  }
-}
-function end(tagName) {
-  let element = stack.pop()
-  currentParent = stack[stack.length - 1]
-  if (currentParent) {
-    element.parent = currentParent
-    currentParent.children.push(element)
-  }
-}
 export function parseHTML(html) {
+  let root = null // ast语法树的树根
+  let currentParent // 标识当前父亲是谁
+  let stack = []
+  const ELEMENT_TYPE = 1
+  const TEXT_TYPE = 3
+
+  function createASTElement(tagName, attrs) {
+    return {
+      tag: tagName,
+      type: ELEMENT_TYPE,
+      children: [],
+      attrs,
+      parent: null,
+    }
+  }
+  function start(tagName, attrs) {
+    // 遇到开始标签 就创建一个ast元素
+    let element = createASTElement(tagName, attrs)
+    if (!root) {
+      root = element
+    }
+    currentParent = element // 把当前元素标记成父ast树
+    stack.push(element) // 将开始标签存放到栈中
+  }
+  function chars(text) {
+    text = text.replace(/\s/g, '')
+    if (text) {
+      currentParent.children.push({
+        text,
+        type: TEXT_TYPE,
+      })
+    }
+  }
+  function end(tagName) {
+    let element = stack.pop()
+    currentParent = stack[stack.length - 1]
+    if (currentParent) {
+      element.parent = currentParent
+      currentParent.children.push(element)
+    }
+  }
   // 不停的去解析html字符串
   while (html) {
     let textEnd = html.indexOf('<')
