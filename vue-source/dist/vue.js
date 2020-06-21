@@ -276,6 +276,44 @@
     };
   });
 
+  var id = 0;
+
+  var Dep = /*#__PURE__*/function () {
+    function Dep() {
+      _classCallCheck(this, Dep);
+
+      this.id = id++;
+      this.subs = [];
+    }
+
+    _createClass(Dep, [{
+      key: "depend",
+      value: function depend() {
+        this.subs.push(Dep.target); // 观察者模式
+      }
+    }, {
+      key: "notify",
+      value: function notify() {
+        this.subs.forEach(function (watcher) {
+          return watcher.update();
+        });
+      }
+    }]);
+
+    return Dep;
+  }();
+
+  var stack = []; // 目前可以做到 将watcher保留起来 和 移除的功能
+
+  function pushTarget(watcher) {
+    Dep.target = watcher;
+    stack.push(watcher);
+  }
+  function popTarget() {
+    stack.pop();
+    Dep.target = stack[stack.length - 1];
+  }
+
   var Observer = /*#__PURE__*/function () {
     function Observer(data) {
       _classCallCheck(this, Observer);
@@ -316,10 +354,18 @@
 
 
   function defineReactive(data, key, value) {
+    var dep = new Dep();
     observer(value); // 如果传入的值还是一个对象的话，就做递归循环监测
 
     Object.defineProperty(data, key, {
+      configurable: true,
+      enumerable: true,
       get: function get() {
+        if (Dep.target) {
+          // 如果当前有watcher
+          dep.depend(); // 意味着我要将watcher存起来
+        }
+
         return value;
       },
       set: function set(newValue) {
@@ -330,6 +376,7 @@
         observer(newValue); // 监控当前设置的值，有可能用户给了一个新值还是对象
 
         value = newValue;
+        dep.notify(); // 通知依赖的watcher来进行下一个更新操作
       }
     });
   }
@@ -606,22 +653,34 @@
     return renderFn;
   }
 
+  var id$1 = 0;
+
   var Watcher = /*#__PURE__*/function () {
     function Watcher(vm, exprOrFn, callback, options) {
       _classCallCheck(this, Watcher);
 
       this.vm = vm;
       this.callback = callback;
-      this.options = options; // 将内部传过来的回调函数，放到getter属性上
+      this.options = options;
+      this.id = id$1++; // 将内部传过来的回调函数，放到getter属性上
 
       this.getter = exprOrFn;
-      this.get();
+      this.get(); // 调用get方法， 会让渲染watcher执行
     }
 
     _createClass(Watcher, [{
       key: "get",
       value: function get() {
-        this.getter();
+        pushTarget(this); // 把watcher存起来
+
+        this.getter(); // 渲染watcher的执行
+
+        popTarget(); // 移除watcher
+      }
+    }, {
+      key: "update",
+      value: function update() {
+        this.get();
       }
     }]);
 
@@ -824,20 +883,6 @@
     Vue.mixin = function (mixin) {
       this.options = mergeOptions(this.options, mixin);
     };
-
-    Vue.mixin({
-      a: 1,
-      beforeCreate: function beforeCreate() {
-        console.log('mixin 1');
-      }
-    });
-    Vue.mixin({
-      b: 2,
-      beforeCreate: function beforeCreate() {
-        console.log('mixin 2');
-      }
-    });
-    console.log(Vue.options);
   }
 
   function Vue(options) {

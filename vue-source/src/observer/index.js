@@ -1,5 +1,6 @@
 import { isObject, def } from '../utils'
 import { arrayMethods } from './array'
+import Dep from './dep'
 class Observer {
   constructor(data) {
     // 相当于在数据上可以获取到__ob__这个属性 指代的是observer实例
@@ -30,9 +31,15 @@ class Observer {
 }
 // vue2的性能 递归重写get和set 一次性递归到底 proxy可以解决
 function defineReactive(data, key, value) {
+  let dep = new Dep()
   observer(value) // 如果传入的值还是一个对象的话，就做递归循环监测
   Object.defineProperty(data, key, {
+    configurable: true,
+    enumerable: true,
     get() {
+      if(Dep.target) { // 如果当前有watcher
+        dep.depend() // 意味着我要将watcher存起来
+      }
       return value
     },
     set(newValue) {
@@ -41,6 +48,7 @@ function defineReactive(data, key, value) {
       }
       observer(newValue) // 监控当前设置的值，有可能用户给了一个新值还是对象
       value = newValue
+      dep.notify() // 通知依赖的watcher来进行下一个更新操作
     },
   })
 }

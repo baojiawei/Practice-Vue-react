@@ -42,20 +42,13 @@
             },
             arr: [1, 2, 3, 4, { a: 1 }],
           }
-        },
-        beforeCreate() {
-          console.log('beforeCreate', this.age)
-        },
-        created() {
-          console.log('created', this.$el)
-        },
-        beforeMount() {
-          console.log('beforeMount', this.$el)
-        },
-        mounted() {
-          console.log('mounted', this.$el)
         }
       })
+
+      setTimeout(() => {
+        vm.age = 100
+        vm._update(vm._render())
+      },1000)
     </script>
   </body>
 </html>

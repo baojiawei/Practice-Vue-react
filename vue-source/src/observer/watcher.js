@@ -1,14 +1,22 @@
+import { pushTarget, popTarget } from './dep'
+let id = 0
 class Watcher {
   constructor(vm, exprOrFn, callback, options) {
     this.vm = vm
     this.callback = callback
     this.options = options
+    this.id = id++
     // 将内部传过来的回调函数，放到getter属性上
     this.getter = exprOrFn
-    this.get()
+    this.get() // 调用get方法， 会让渲染watcher执行
   }
   get() {
-    this.getter()
+    pushTarget(this) // 把watcher存起来
+    this.getter() // 渲染watcher的执行
+    popTarget() // 移除watcher
+  }
+  update() {
+    this.get()
   }
 }
 
