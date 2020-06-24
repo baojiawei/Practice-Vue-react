@@ -272,6 +272,8 @@
       }
 
       inserted && ob.observerArray(inserted);
+      ob.dep.notify(); // 调用数组api会触发通知
+
       return result;
     };
   });
@@ -324,8 +326,10 @@
     function Observer(data) {
       _classCallCheck(this, Observer);
 
+      this.dep = new Dep(); // 给数组用的dep
       // 相当于在数据上可以获取到__ob__这个属性 指代的是observer实例
       // __ob__ 是一个响应式的标识，对象数组都有
+
       def(data, '__ob__', this);
 
       if (Array.isArray(data)) {
@@ -361,7 +365,7 @@
 
   function defineReactive(data, key, value) {
     var dep = new Dep();
-    observer(value); // 如果传入的值还是一个对象的话，就做递归循环监测
+    var childOb = observer(value); // 如果传入的值还是一个对象的话，就做递归循环监测
 
     Object.defineProperty(data, key, {
       configurable: true,
@@ -370,6 +374,15 @@
         if (Dep.target) {
           // 如果当前有watcher
           dep.depend(); // 意味着我要将watcher存起来
+
+          if (childOb) {
+            childOb.dep.depend(); // 收集了数组的相关依赖
+            // 如果数组里还有数组
+
+            if (Array.isArray(value)) {
+              dependArray(value);
+            }
+          }
         }
 
         return value;
@@ -385,6 +398,19 @@
         dep.notify(); // 通知依赖的watcher来进行下一个更新操作
       }
     });
+  }
+
+  function dependArray(value) {
+    for (var i = 0; i < value.length; i++) {
+      var current = value[i]; // 将数组中的每一个都取出来，数据变化后，也会去更新视图
+      // 数组中的依赖收集
+
+      current.__ob__ && current.__ob__.dep.depend();
+
+      if (Array.isArray(current)) {
+        dependArray(current);
+      }
+    }
   }
 
   function observer(data) {

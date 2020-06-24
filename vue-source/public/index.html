@@ -17,6 +17,7 @@
     <div id="app">
       <div id="room" class="red" style="color: blue; width: 200px;">
         <span>123</span> hello {{msg}} {{age}}
+        <div>{{ arr }}</div>
       </div>
       <div>
         <ul class="green">
@@ -40,13 +41,13 @@
             address: {
               city: '杭州',
             },
-            arr: [1, 2, 3, 4, { a: 1 }],
+            arr: [[[1,2,3,4]]],
           }
         }
       })
 
       setTimeout(() => {
-        vm.age = 100
+        vm.arr[0][0].push(5,6,7)
       },1000)
     </script>
   </body>

@@ -26,6 +26,7 @@ methods.forEach((method) => {
         break
     }
     inserted && ob.observerArray(inserted)
+    ob.dep.notify() // 调用数组api会触发通知
     return result
   }
 })
