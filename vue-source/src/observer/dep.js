@@ -4,12 +4,15 @@ class Dep {
     this.id = id++
     this.subs = []
   }
-  depend() {
-    this.subs.push(Dep.target) // 观察者模式
+  addSub(watcher) {
+    this.subs.push(watcher) // 观察者模式
   }
-
+  depend() {
+    // 让watcher记住我当前的dep,多对多的关系
+    Dep.target.addDep(this)
+  }
   notify() {
-    this.subs.forEach(watcher => watcher.update())
+    this.subs.forEach((watcher) => watcher.update())
   }
 }
 let stack = []

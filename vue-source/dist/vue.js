@@ -287,9 +287,15 @@
     }
 
     _createClass(Dep, [{
+      key: "addSub",
+      value: function addSub(watcher) {
+        this.subs.push(watcher); // 观察者模式
+      }
+    }, {
       key: "depend",
       value: function depend() {
-        this.subs.push(Dep.target); // 观察者模式
+        // 让watcher记住我当前的dep,多对多的关系
+        Dep.target.addDep(this);
       }
     }, {
       key: "notify",
@@ -665,10 +671,24 @@
       this.id = id$1++; // 将内部传过来的回调函数，放到getter属性上
 
       this.getter = exprOrFn;
+      this.depsId = new Set();
+      this.deps = [];
       this.get(); // 调用get方法， 会让渲染watcher执行
     }
 
     _createClass(Watcher, [{
+      key: "addDep",
+      value: function addDep(dep) {
+        // watcher里不能存放重复的dep， dep里不能放重复的dep
+        var id = dep.id;
+
+        if (!this.depsId.has(id)) {
+          this.depsId.add(id);
+          this.deps.push(dep);
+          dep.addSub(this);
+        }
+      }
+    }, {
       key: "get",
       value: function get() {
         pushTarget(this); // 把watcher存起来
