@@ -685,6 +685,49 @@
     return renderFn;
   }
 
+  var callbacks = [];
+  var waiting = false;
+
+  function flushCallback() {
+    callbacks.forEach(function (callback) {
+      return callback();
+    });
+    waiting = false;
+  }
+
+  function nextTick(cb) {
+    // 多次调用nextTick 先存入数组中，之后再调用一次执行就可以了
+    callbacks.push(cb);
+
+    if (!waiting) {
+      setTimeout(flushCallback, 0);
+      waiting = true;
+    }
+  }
+
+  var queue = [];
+  var has = {};
+
+  function flushSchedularQueue() {
+    queue.forEach(function (watcher) {
+      return watcher.run();
+    });
+    queue = [];
+    has = {};
+  }
+
+  function queueWatcher(watcher) {
+    var id = watcher.id;
+
+    if (has[id] == null) {
+      queue.push(watcher);
+      has[id] = true; // 宏任务和微任务（vue里面使用Vue.nextTick）
+      // Vue.nextTick = promise / mutationObserver / setImmediate / setTimeout
+
+      nextTick(flushSchedularQueue);
+    }
+  }
+
   var id$1 = 0;
 
   var Watcher = /*#__PURE__*/function () {
@@ -726,6 +769,12 @@
     }, {
       key: "update",
       value: function update() {
+        // 异步更新
+        queueWatcher(this);
+      }
+    }, {
+      key: "run",
+      value: function run() {
         this.get();
       }
     }]);
@@ -866,7 +915,10 @@
 
 
       mountComponent(vm, el);
-    };
+    }; // 用户调用的nextTick
+
+
+    Vue.prototype.$nextTick = nextTick;
   }
 
   function createElement(tag) {

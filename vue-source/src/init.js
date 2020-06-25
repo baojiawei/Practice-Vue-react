@@ -1,7 +1,8 @@
 import { initState } from './state'
 import { compileToFunctions } from './compiler/index'
 import { mountComponent, callHook } from './lifecycle'
-import { mergeOptions } from './utils'
+import { mergeOptions } from './utils/index'
+import { nextTick } from './utils/next-tick'
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     // Vue的内部 $options 就是用户传递的所有参数
@@ -37,4 +38,6 @@ export function initMixin(Vue) {
     // 渲染当前组件 挂载这个组件
     mountComponent(vm, el)
   }
+  // 用户调用的nextTick
+  Vue.prototype.$nextTick = nextTick
 }

@@ -1,4 +1,5 @@
 import { pushTarget, popTarget } from './dep'
+import { queueWatcher } from './schedular'
 let id = 0
 class Watcher {
   constructor(vm, exprOrFn, callback, options) {
@@ -27,8 +28,11 @@ class Watcher {
     popTarget() // 移除watcher
   }
   update() {
+    // 异步更新
+    queueWatcher(this)
+  }
+  run() {
     this.get()
   }
 }
-
 export default Watcher

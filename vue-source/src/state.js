@@ -1,5 +1,5 @@
 import { observer } from './observer/index'
-import { proxy } from './utils'
+import { proxy } from './utils/index'
 export function initState(vm) {
   const options = vm.$options
   if (options.props) {

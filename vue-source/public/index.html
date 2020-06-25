@@ -41,14 +41,16 @@
             address: {
               city: '杭州',
             },
-            arr: [[[1,2,3,4]]],
+            arr: [[[1, 2, 3, 4]]],
           }
-        }
+        },
       })
-
-      setTimeout(() => {
-        vm.arr[0][0].push(5,6,7)
-      },1000)
+      vm.arr[0][0].push(5, 6, 7)
+      vm.arr[0].push(5, 6, 7)
+      vm.arr.push(5, 6, 7)
+      vm.$nextTick(() => {
+        console.log(vm.$el.innerHTML)
+      })
     </script>
   </body>
 </html>

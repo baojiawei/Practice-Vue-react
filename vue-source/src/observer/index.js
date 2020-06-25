@@ -1,4 +1,4 @@
-import { isObject, def } from '../utils'
+import { isObject, def } from '../utils/index'
 import { arrayMethods } from './array'
 import Dep from './dep'
 class Observer {
