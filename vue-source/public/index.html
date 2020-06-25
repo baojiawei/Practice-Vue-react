@@ -15,21 +15,18 @@
   </head>
   <body>
     <div id="app">
-      <div id="room" class="red" style="color: blue; width: 200px;">
-        <span>123</span> hello {{msg}} {{age}}
-        <div>{{ arr }}</div>
-      </div>
-      <div>
-        <ul class="green">
-          <li>helloworld</li>
-          <li style="color: purple;">杭州</li>
-          <li style="color: black;">上海</li>
-        </ul>
-      </div>
+      <my-component></my-component>
+      <my-component></my-component>
+      <my-component></my-component>
     </div>
     <script src="../dist/vue.js"></script>
     <!-- vue2中 模板编译 可以选择性添加 runtimeOnly 只在运行时使用 （无法解析用户传递template属性） runtime with compiler (可以实现模板编译的)-->
     <script>
+      // 内部会调用Vue.extend 返回一个组件的构造函数，通过new这个构造函数产生实例
+      Vue.component('my-component', {
+        template: '<div>hello 你好</div>',
+      })
+      // 更改组件的合并策略
       const vm = new Vue({
         el: '#app',
         // 数据会被进行观测，响应式数据变化， 我们对数据操作可以更新视图
@@ -37,19 +34,18 @@
         data() {
           return {
             msg: '测试一下',
-            age: 12,
-            address: {
-              city: '杭州',
-            },
-            arr: [[[1, 2, 3, 4]]],
           }
         },
-      })
-      vm.arr[0][0].push(5, 6, 7)
-      vm.arr[0].push(5, 6, 7)
-      vm.arr.push(5, 6, 7)
-      vm.$nextTick(() => {
-        console.log(vm.$el.innerHTML)
+        components: {
+          'my-component': {
+            template: '<div>hello <aa></aa> </div>',
+            components: {
+              aa: {
+                template:'<div>world</div>'
+              }
+            }
+          },
+        },
       })
     </script>
   </body>
