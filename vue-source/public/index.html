@@ -4,24 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <style>
+    <!-- <style>
       .red {
         color: red;
       }
       .green {
         color: green;
       }
-    </style>
+    </style> -->
   </head>
   <body>
-    <div id="app">
+    <!-- <div id="app">
       <my-component></my-component>
       <my-component></my-component>
       <my-component></my-component>
-    </div>
+    </div> -->
     <script src="../dist/vue.js"></script>
     <!-- vue2中 模板编译 可以选择性添加 runtimeOnly 只在运行时使用 （无法解析用户传递template属性） runtime with compiler (可以实现模板编译的)-->
-    <script>
+    <!-- <script>
       // 内部会调用Vue.extend 返回一个组件的构造函数，通过new这个构造函数产生实例
       Vue.component('my-component', {
         template: '<div>hello 你好</div>',
@@ -47,6 +47,6 @@
           },
         },
       })
-    </script>
+    </script> -->
   </body>
 </html>

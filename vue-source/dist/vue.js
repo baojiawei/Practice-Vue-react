@@ -826,22 +826,26 @@
         parentElm.insertBefore(el, oldElm.nextSibling);
         parentElm.removeChild(oldElm);
         return el;
+      } else {
+        // 标签不一致，直接替换即可
+        if (oldVnode.tag !== vnode.tag) {
+          oldVnode.el.parentNode.replaceChild(createElm(vnode), oldVnode.el);
+        } // 文本都没有tag，如果内容不一致，直接替换文本
+
+
+        if (!oldVnode.tag) {
+          if (oldVnode.text !== vnode.text) {
+            oldVnode.el.textContent = vnode.text;
+          }
+        } // 标签一致并且不是文本（比对属性是否一致）
+
+
+        var _el = vnode.el = oldVnode.el;
+
+        updateProperties(vnode, oldVnode.data);
       }
     }
   }
-
-  function createComponent(vnode) {
-    var i = vnode.data;
-
-    if ((i = i.hook) && (i = i.init)) {
-      i(vnode);
-    }
-
-    if (vnode.componentInstance) {
-      return true;
-    }
-  }
-
   function createElm(vnode) {
     var tag = vnode.tag,
         children = vnode.children,
@@ -866,22 +870,50 @@
     }
 
     return vnode.el; // 如果不是标签就是文本
+  }
+
+  function createComponent(vnode) {
+    var i = vnode.data;
+
+    if ((i = i.hook) && (i = i.init)) {
+      i(vnode);
+    }
+
+    if (vnode.componentInstance) {
+      return true;
+    }
   } // 添加相应的属性
 
 
   function updateProperties(vnode) {
+    var oldProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var newProps = vnode.data || {};
-    var el = vnode.el;
+    var el = vnode.el; // 如果老的属性中有，新的属性中没有，在真实dom上将这个属性删除掉
 
-    for (var key in newProps) {
-      if (key === 'style') {
+    var newStyle = newProps.style || {};
+    var oldStyle = oldProps.style || {};
+
+    for (var key in oldStyle) {
+      if (!newStyle[key]) {
+        el.style[key] = '';
+      }
+    }
+
+    for (var _key in oldProps) {
+      if (!newProps[_key]) {
+        el.removeAttribute(_key);
+      }
+    }
+
+    for (var _key2 in newProps) {
+      if (_key2 === 'style') {
         for (var styleName in newProps.style) {
           el.style[styleName] = newProps.style[styleName];
         }
-      } else if (key === 'class') {
+      } else if (_key2 === 'class') {
         el.className = newProps["class"];
       } else {
-        el.setAttribute(key, newProps[key]);
+        el.setAttribute(_key2, newProps[_key2]);
       }
     }
   }
@@ -1040,7 +1072,7 @@
 
 
     Vue.prototype._s = function (val) {
-      return val == null ? '' : _typeof(val) === 'object' ? JSON.stringify(val) : val;
+      return val == null ? '' : typeof val === ' object' ? JSON.stringify(val) : val;
     };
 
     Vue.prototype._render = function () {
@@ -1115,6 +1147,30 @@
   lifecycleMixin(Vue); // 初始化全局的API
 
   initGlobalAPI(Vue);
+  var vm1 = new Vue({
+    data: function data() {
+      return {
+        name: 'hello'
+      };
+    }
+  });
+  var render1 = compileToFunctions('<div id="app" a="1" style="font-size:14px">{{name}}</div>');
+  var vnode$1 = render1.call(vm1);
+  var el = createElm(vnode$1);
+  document.body.appendChild(el);
+  var vm2 = new Vue({
+    data: function data() {
+      return {
+        name: 'world',
+        age: 11
+      };
+    }
+  });
+  var render2 = compileToFunctions('<div id="aaa" b="2" style="color: green">{{age}}<span>{{name}}</span></div>');
+  var newVnode = render2.call(vm2);
+  setTimeout(function () {
+    patch(vnode$1, newVnode);
+  }, 3000);
 
   return Vue;
 

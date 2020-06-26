@@ -13,7 +13,7 @@ export function renderMixin(Vue) {
   Vue.prototype._s = function (val) {
     return val == null
       ? ''
-      : typeof val === 'object'
+      : typeof val === ' object'
       ? JSON.stringify(val)
       : val
   }
