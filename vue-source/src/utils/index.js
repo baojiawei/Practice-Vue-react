@@ -114,7 +114,7 @@ export function mergeOptions(parent, child) {
 export function isReservedTag(tagName) {
   let str = 'p,div,span,input,button'
   let obj = {}
-  str.split(',').forEach(tag => {
+  str.split(',').forEach((tag) => {
     obj[tag] = true
   })
   return obj[tagName]
